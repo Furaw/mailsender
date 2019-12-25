@@ -27,19 +27,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import javax.validation.Path;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.vaadin.flow.component.notification.Notification.Position.MIDDLE;
-import static java.awt.GridBagConstraints.CENTER;
 
 @Route("")
 @CssImport("./styles/styles.css")
-public class MainUI extends VerticalLayout {
+public class MainUI extends VerticalLayout{
 
     @Autowired
     private MailServices mailServices;
@@ -49,7 +49,6 @@ public class MainUI extends VerticalLayout {
     private final TextArea textArea = new TextArea("", "FTL template:");
     private final TextArea jsonArea = new TextArea("", "JSON:");
     private Button sendButton;
-   // private String content2 = jsonArea.getValue();
     private final MemoryBuffer htmlMemoryBuffer = new MemoryBuffer();
     private final MemoryBuffer jsonMemoryBuffer = new MemoryBuffer();
     private final Upload uploadTemplate = new Upload(htmlMemoryBuffer);
@@ -58,11 +57,27 @@ public class MainUI extends VerticalLayout {
     private final H2 h2one = new H2("Your mail successfully send");
     private final H2 h2two = new H2("Error sending mail");
     private Button singInButton;
+    private Button saveChanges;
+    private  Button saveFTL;
     private Button singOutButton;
     private final TextField userMail = new TextField("", "Your email: ");
     private final PasswordField userPassword = new PasswordField("", "Your password: ");
 
     public MainUI() {
+        saveChanges = new Button("Save changes", clik -> {
+            try {
+                saveJson();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        saveFTL = new Button("Save changes", clik -> {
+            try {
+                saveFTL();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
         singOutButton = new Button("Sign out", clik -> {
             singOutButtonClick();
         });
@@ -102,9 +117,9 @@ public class MainUI extends VerticalLayout {
 
     private void addComponents() {
         Header();
-        VerticalLayout centerPart = new VerticalLayout(jsonArea, uploadJson);
+        VerticalLayout centerPart = new VerticalLayout(jsonArea, uploadJson,saveChanges);
 
-        VerticalLayout rightPart = new VerticalLayout(textArea, uploadTemplate);
+        VerticalLayout rightPart = new VerticalLayout(textArea, uploadTemplate,saveFTL);
 
         HorizontalLayout content = new HorizontalLayout(leftPart, centerPart, rightPart);
         content.setSizeFull();
@@ -115,6 +130,10 @@ public class MainUI extends VerticalLayout {
         textArea.setHeight("500px");
         jsonArea.setWidth("500px");
         jsonArea.setHeight("500px");
+        saveChanges.setHeight("50px");
+        saveChanges.setWidth("200px");
+        saveFTL.setHeight("50px");
+        saveFTL.setWidth("200px");
         textArea.addValueChangeListener(event -> showHTML(event.getValue()));
         uploadTemplate.addSucceededListener(e -> {
             uploadHtmlEvent();
@@ -225,5 +244,31 @@ public class MainUI extends VerticalLayout {
         }
     }
 
+    private void saveJson() throws IOException
+    {
+        String fileContent = jsonArea.getValue();
+        RandomAccessFile stream = new RandomAccessFile("/home/andrusha/Documents/mailsender-master/src/main/resources/templates/email_test.txt", "rw");
+        FileChannel channel = stream.getChannel();
+        byte[] strBytes = fileContent.getBytes();
+        ByteBuffer buffer = ByteBuffer.allocate(strBytes.length);
+        buffer.put(strBytes);
+        buffer.flip();
+        channel.write(buffer);
+        stream.close();
+        channel.close();
+    }
+    private void saveFTL() throws IOException
+    {
+        String fileContent = textArea.getValue();
+        RandomAccessFile stream = new RandomAccessFile("/home/andrusha/Documents/mailsender-master/src/main/resources/templates/email_test.ftl", "rw");
+        FileChannel channel = stream.getChannel();
+        byte[] strBytes = fileContent.getBytes();
+        ByteBuffer buffer = ByteBuffer.allocate(strBytes.length);
+        buffer.put(strBytes);
+        buffer.flip();
+        channel.write(buffer);
+        stream.close();
+        channel.close();
+    }
 
 }
