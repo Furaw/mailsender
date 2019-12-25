@@ -1,0 +1,8 @@
+[
+{"recipientEmail":"wladimir@gmail.com",
+"recipientSubject":"Hello"
+},
+{"recipientEmail":"furaw2@gmail.com",
+"recipientSubject":"Hello friend"
+}
+]
